@@ -28,7 +28,7 @@ string chuyenDiemHeChu(float diemH10);
 void inDanhSach(SinhVien* head);
 
 int main() {
-    SinhVien* head = NULL; // Kh?i t?o danh sách liên k?t kép
+    SinhVien* head = NULL; // khoi tao danh sach lien ket kep
 
     char luaChon;
     do {
