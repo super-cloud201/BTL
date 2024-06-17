@@ -3,18 +3,18 @@
 
 using namespace std;
 
-// Đinh nghia cau truc cho sinh vien 
+// Định nghĩa cấu trúc cho sinh viên 
 struct SinhVien {
-    string id;       // Ma so sinh vien 
-    string ten;      // Ten sinh viên
-    float diemH10;   // Diem cua sinh vien(He 10) 
-    float diemH4;    // Diem cua sinh vien(He 4) 
-    string diemChu;  // Diem cua sinh vien(He chu) 
-    SinhVien* prev;  // Con tro chi den sinh vien truoc do trong danh sach lien ket kep 
-    SinhVien* next;  // Con tro chi den sinh vien tiep theo trong danh sach lien ket kep
+    string id;       // Mã số sinh viên 
+    string ten;      // Tên sinh viên
+    float diemH10;   // Điểm của sinh viên (Hệ 10) 
+    float diemH4;    // Điểm của sinh viên (Hệ 4) 
+    string diemChu;  // Điểm của sinh viên (Hệ chữ) 
+    SinhVien* prev;  // Con trỏ chỉ đến sinh viên trước đó trong danh sách liên kết kép 
+    SinhVien* next;  // Con trỏ chỉ đến sinh viên tiếp theo trong danh sách liên kết kép
 };
 
-// Cac ham thao tac 
+// Các hàm thao tác 
 void themSinhVien(SinhVien* &head);
 void suaThongTinSinhVien(SinhVien* head, string id);
 void xoaSinhVien(SinhVien* &head, string id);
@@ -22,13 +22,11 @@ void timKiemSinhVien(SinhVien* head, string id);
 void sapXepTheoMaSV(SinhVien* &head);
 void sapXepTheoTen(SinhVien* &head);
 void sapXepTheoDiem(SinhVien* &head);
-float tinhDiemTrungBinh(SinhVien* head);
-string chuyenDiemHeChu(float diemH10);
-
+void tinhDiemTrungBinh(SinhVien* head, float &diemTBH10, float &gpaTB, string &diemChuTB);
 void inDanhSach(SinhVien* head);
 
 int main() {
-    SinhVien* head = NULL; // khoi tao danh sach lien ket kep
+    SinhVien* head = NULL; // khởi tạo danh sách liên kết kép
 
     char luaChon;
     do {
@@ -79,9 +77,13 @@ int main() {
             case '7':
                 sapXepTheoDiem(head);
                 break;
-            case '8':
-                cout << "Diem trung binh cua tat ca cac sinh vien: " << tinhDiemTrungBinh(head) << endl;
+            case '8': {
+                float diemTBH10, gpaTB;
+                string diemChuTB;
+                tinhDiemTrungBinh(head, diemTBH10, gpaTB, diemChuTB);
+                cout << "Diem trung binh cua tat ca cac sinh vien: " << diemTBH10 << " (GPA: " << gpaTB << "; diem he Chu: " << diemChuTB << ")" << endl;
                 break;
+            }
             case '9':
                 inDanhSach(head);
                 break;
@@ -93,7 +95,7 @@ int main() {
         }
     } while (luaChon != '0');
 
-    // Giai phong bo nho cua danh sach lien ket truoc khi ket thuc chuong trinh 
+    // Giải phóng bộ nhớ của danh sách liên kết trước khi kết thúc chương trình 
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
         SinhVien* temp = hienTai;
@@ -104,7 +106,7 @@ int main() {
     return 0;
 }
 
-// Ham them sinh vien moi vao danh sach lien ket kep 
+// Hàm thêm sinh viên mới vào danh sách liên kết kép 
 void themSinhVien(SinhVien* &head) {
     SinhVien* sinhVienMoi = new SinhVien;
     cout << "Nhap ma so sinh vien: ";
@@ -115,7 +117,7 @@ void themSinhVien(SinhVien* &head) {
     cout << "Nhap diem sinh vien (he 10): ";
     cin >> sinhVienMoi->diemH10;
 
-    // Chuyen diem he 10 sang diem he 4 va diem he chu
+    // Chuyển điểm hệ 10 sang điểm hệ 4 và điểm hệ chữ
     if (sinhVienMoi->diemH10 < 4.0) {
         sinhVienMoi->diemH4 = 0;
         sinhVienMoi->diemChu = "F";
@@ -155,7 +157,7 @@ void themSinhVien(SinhVien* &head) {
     cout << "Them sinh vien thanh cong.\n";
 }
 
-// Ham sua thong tin cua 1 sinh vien
+// Hàm sửa thông tin của 1 sinh viên
 void suaThongTinSinhVien(SinhVien* head, string id) {
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
@@ -163,7 +165,7 @@ void suaThongTinSinhVien(SinhVien* head, string id) {
             cout << "Nhap diem moi cho sinh vien (he 10): ";
             cin >> hienTai->diemH10;
 
-            // Chhuyen diem he 10 sang diem he 4 va diem he chu
+            // Chuyển điểm hệ 10 sang điểm hệ 4 và điểm hệ chữ
             if (hienTai->diemH10 < 4.0) {
                 hienTai->diemH4 = 0.0;
                 hienTai->diemChu = "F";
@@ -185,23 +187,23 @@ void suaThongTinSinhVien(SinhVien* head, string id) {
             } else if (hienTai->diemH10 >= 8.0 && hienTai->diemH10 < 8.5) {
                 hienTai->diemH4 = 3.5;
                 hienTai->diemChu = "B+";
-            } else if (hienTai->diemH10 >= 8.5 && hienTai->diemH10 <= 10) {
+            } else if (hienTai->diemH10 >= 8.5 && hienTai->diemH10 <= 10.0) {
                 hienTai->diemH4 = 4.0;
                 hienTai->diemChu = "A";
             } else {
-                cout << "Diem nhap khong hop le, moi nhap lai.\n";
+                cout << "Diem nhap khong hop le, vui long thu lai.\n";
                 return;
             }
 
-            cout << "Thong tin sinh vien da duoc cap nhat.\n";
+            cout << "Sua thong tin sinh vien thanh cong.\n";
             return;
         }
         hienTai = hienTai->next;
     }
-    cout << "Khong tim thay sinh vien co ma so " << id << ".\n";
+    cout << "Khong tim thay sinh vien voi ma so " << id << ".\n";
 }
 
-// Ham xoa 1 sinh vien khoi danh sach
+// Hàm xóa sinh viên ra khỏi danh sách liên kết kép
 void xoaSinhVien(SinhVien* &head, string id) {
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
@@ -215,155 +217,176 @@ void xoaSinhVien(SinhVien* &head, string id) {
                 hienTai->next->prev = hienTai->prev;
             }
             delete hienTai;
-            cout << "Da xoa sinh vien co ma so " << id << ".\n";
+            cout << "Xoa sinh vien thanh cong.\n";
             return;
         }
         hienTai = hienTai->next;
     }
-    cout << "Khong tim thay sinh vien co ma so " << id << ".\n";
+    cout << "Khong tim thay sinh vien voi ma so " << id << ".\n";
 }
 
-// Ham tim kiem thong tin cua sinh vien
+// Hàm tìm kiếm sinh viên theo mã số sinh viên
 void timKiemSinhVien(SinhVien* head, string id) {
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
         if (hienTai->id == id) {
-            cout << "Sinh vien duoc tim thay:\n";
-            cout << "Ma so: " << hienTai->id << endl;
-            cout << "Ten: " << hienTai->ten << endl;
-            cout << "Diem: " << hienTai->diemH10 << " (GPA: " << hienTai->diemH4 << "; diem he Chu: " << hienTai->diemChu << ")" << endl;
+            cout << "Thong tin sinh vien:\n";
+            cout << "Ma so sinh vien: " << hienTai->id << endl;
+            cout << "Ten sinh vien: " << hienTai->ten << endl;
+            cout << "Diem sinh vien (he 10): " << hienTai->diemH10 << endl;
+            cout << "Diem sinh vien (he 4): " << hienTai->diemH4 << endl;
+            cout << "Diem sinh vien (he chu): " << hienTai->diemChu << endl;
             return;
         }
         hienTai = hienTai->next;
     }
-    cout << "Khong tim thay sinh vien co ma so " << id << ".\n";
+    cout << "Khong tim thay sinh vien voi ma so " << id << ".\n";
 }
 
-// sap xep theo ten
-void SapXepTheoTen(DanhSach& ds) {
-    bool daSapXep;
-    SinhVien* p;
-    SinhVien* q = nullptr; 
+// Hàm sắp xếp danh sách sinh viên theo mã số sinh viên
+void sapXepTheoMaSV(SinhVien* &head) {
+    if (head == NULL) {
+        return;
+    }
+
+    bool swapped;
+    SinhVien* ptr1;
+    SinhVien* lptr = NULL;
 
     do {
-        daSapXep = true;
-        p = ds.pHead;
+        swapped = false;
+        ptr1 = head;
 
-        while (p->pNext != q) {
-            if (p->hoTen > p->pNext->hoTen) {
-                // hoan doi thong tin 2 sinh vien
-                swap(p->maSV, p->pNext->maSV);
-                swap(p->hoTen, p->pNext->hoTen);
-                swap(p->diemGiuaKy, p->pNext->diemGiuaKy);
-                swap(p->diemCuoiKy, p->pNext->diemCuoiKy);
-                daSapXep = false;
+        while (ptr1->next != lptr) {
+            if (ptr1->id > ptr1->next->id) {
+                swap(ptr1->id, ptr1->next->id);
+                swap(ptr1->ten, ptr1->next->ten);
+                swap(ptr1->diemH10, ptr1->next->diemH10);
+                swap(ptr1->diemH4, ptr1->next->diemH4);
+                swap(ptr1->diemChu, ptr1->next->diemChu);
+                swapped = true;
             }
-            p = p->pNext;
+            ptr1 = ptr1->next;
         }
-        q = p; 
-    } while (!daSapXep);
+        lptr = ptr1;
+    } while (swapped);
+    cout << "Sap xep danh sach theo ma so sinh vien thanh cong.\n";
 }
 
-// ham sap xep sinh vien theo diem 
-void SapXepTheoDiem(DanhSach& ds) {
-    bool daSapXep;
-    SinhVien* p;
-    SinhVien* q = nullptr;
+// Hàm sắp xếp danh sách sinh viên theo tên
+void sapXepTheoTen(SinhVien* &head) {
+    if (head == NULL) {
+        return;
+    }
+
+    bool swapped;
+    SinhVien* ptr1;
+    SinhVien* lptr = NULL;
 
     do {
-        daSapXep = true;
-        p = ds.pHead;
+        swapped = false;
+        ptr1 = head;
 
-        while (p->pNext != q) {
-            float diemTB1 = TinhDiemTrungBinh(*p);
-            float diemTB2 = TinhDiemTrungBinh(*(p->pNext));
-            if (diemTB1 < diemTB2) {
-                swap(*p, *(p->pNext)); 
-                daSapXep = false;
+        while (ptr1->next != lptr) {
+            if (ptr1->ten > ptr1->next->ten) {
+                swap(ptr1->id, ptr1->next->id);
+                swap(ptr1->ten, ptr1->next->ten);
+                swap(ptr1->diemH10, ptr1->next->diemH10);
+                swap(ptr1->diemH4, ptr1->next->diemH4);
+                swap(ptr1->diemChu, ptr1->next->diemChu);
+                swapped = true;
             }
-            p = p->pNext;
+            ptr1 = ptr1->next;
         }
-        q = p;
-    } while (!daSapXep);
+        lptr = ptr1;
+    } while (swapped);
+    cout << "Sap xep danh sach theo ten sinh vien thanh cong.\n";
 }
 
-// sap xep theo ma so sinh vien
-void SapXepTheoMaSV(DanhSach& ds) {
-    bool daSapXep;
-    SinhVien* p;
-    SinhVien* q = nullptr;
+// Hàm sắp xếp danh sách sinh viên theo điểm hệ 10
+void sapXepTheoDiem(SinhVien* &head) {
+    if (head == NULL) {
+        return;
+    }
+
+    bool swapped;
+    SinhVien* ptr1;
+    SinhVien* lptr = NULL;
+
     do {
-        daSapXep = true;
-        p = ds.pHead;
+        swapped = false;
+        ptr1 = head;
 
-        while (p->pNext != q) {
-            if (p->maSV > p->pNext->maSV) {
-                swap(*p, *(p->pNext)); 
-                daSapXep = false;
+        while (ptr1->next != lptr) {
+            if (ptr1->diemH10 < ptr1->next->diemH10) {
+                swap(ptr1->id, ptr1->next->id);
+                swap(ptr1->ten, ptr1->next->ten);
+                swap(ptr1->diemH10, ptr1->next->diemH10);
+                swap(ptr1->diemH4, ptr1->next->diemH4);
+                swap(ptr1->diemChu, ptr1->next->diemChu);
+                swapped = true;
             }
-            p = p->pNext;
+            ptr1 = ptr1->next;
         }
-        q = p;
-    } while (!daSapXep);
+        lptr = ptr1;
+    } while (swapped);
+    cout << "Sap xep danh sach theo diem sinh vien thanh cong.\n";
 }
 
-// Ham tinh diem trung binh he 10, gpa trung binh và diem chu trung binh cua tat ca sinh vien
+// Hàm tính điểm trung bình của tất cả sinh viên trong danh sách
 void tinhDiemTrungBinh(SinhVien* head, float &diemTBH10, float &gpaTB, string &diemChuTB) {
     if (head == NULL) {
         cout << "Danh sach sinh vien rong.\n";
-        diemTBH10 = 0.0;
-        gpaTB = 0.0;
-        diemChuTB = "F";
         return;
     }
-    
-    float tongDiemH10 = 0.0;
-    float tongGPA = 0.0;
-    int soLuongSinhVien = 0;
 
+    float tongDiemH10 = 0;
+    float tongDiemH4 = 0;
+    int dem = 0;
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
         tongDiemH10 += hienTai->diemH10;
-        tongGPA += hienTai->diemH4;
-        soLuongSinhVien++;
+        tongDiemH4 += hienTai->diemH4;
+        dem++;
         hienTai = hienTai->next;
     }
 
-    // Tra ve diem trung binh la tong diem chia cho so luong sinh vien
-    diemTBH10 =  tongDiemH10 / soLuongSinhVien;
-    gpaTB =  tongGPA / soLuongSinhVien;
-    
-   // Tinh diem he chu trung binh
-   if(gpaTB<1.0) {
-   	diemChuTB = "F";
-   	} else if(gpaTB>=1.0 && gpaTB<1.5) {
-   		diemChuTB = "D";
-   	} else if(gpaTB>=1.5 && gpaTB<2.0) {
-   		diemChuTB = "D+";
-   	} else if(gpaTB>=2.0 && gpaTB<2.5) {
-   		diemChuTB = "C";
-   	} else if(gpaTB>=2.5 && gpaTB<3.2) {
-   		diemChuTB = "B";
-   	} else if(gpaTB>=3.2 && gpaTB<3.6) {
-   		diemChuTB = "A";
-   	} else if(gpaTB>=3.6 && gpaTB<=4.0) {
-   		diemChuTB = "A+";
+    diemTBH10 = tongDiemH10 / dem;
+    gpaTB = tongDiemH4 / dem;
+
+    if (gpaTB < 1.0) {
+        diemChuTB = "F";
+    } else if (gpaTB >= 1.0 && gpaTB < 1.5) {
+        diemChuTB = "D";
+    } else if (gpaTB >= 1.5 && gpaTB < 2.0) {
+        diemChuTB = "D+";
+    } else if (gpaTB >= 2.0 && gpaTB < 2.5) {
+        diemChuTB = "C";
+    } else if (gpaTB >= 2.5 && gpaTB < 3.0) {
+        diemChuTB = "C+";
+    } else if (gpaTB >= 3.0 && gpaTB < 3.5) {
+        diemChuTB = "B";
+    } else if (gpaTB >= 3.5 && gpaTB < 4.0) {
+        diemChuTB = "B+";
+    } else if (gpaTB >= 4.0) {
+        diemChuTB = "A";
     }
 }
-// Ham in danh sach sinh vien
+
+// Hàm in ra danh sách sinh viên
 void inDanhSach(SinhVien* head) {
     if (head == NULL) {
         cout << "Danh sach sinh vien rong.\n";
-        
         return;
     }
 
-    cout << "Danh sach sinh vien:\n";
     SinhVien* hienTai = head;
     while (hienTai != NULL) {
-        cout << "Ma so: " << hienTai->id << endl;
-        cout << "Ten: " << hienTai->ten << endl;
-        cout << "Diem: " << hienTai->diemH10 << " (GPA: " << hienTai->diemH4 << "; diem he Chu: " << hienTai->diemChu << ")" << endl;
+        cout << "Ma so sinh vien: " << hienTai->id << endl;
+        cout << "Ten sinh vien: " << hienTai->ten << endl;
+        cout << "Diem sinh vien (he 10): " << hienTai->diemH10 << endl;
+        cout << "Diem sinh vien (he 4): " << hienTai->diemH4 << endl;
+        cout << "Diem sinh vien (he chu): " << hienTai->diemChu << endl;
         hienTai = hienTai->next;
     }
 }
